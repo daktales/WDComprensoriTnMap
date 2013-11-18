@@ -11,6 +11,7 @@
 @interface MKPolygon (WDComprensoriTn)
 + (BOOL) polygon:(MKPolygon *)polygon withIdentifier:(id<NSCopying>)identifier containsCoordinate:(CLLocationCoordinate2D)coordinate;
 + (MKPolygon *) polygonForTrentino;
++ (MKPolygon *) polygonForEverythingButTrentino;
 + (MKPolygon *) polygonForC1;
 + (MKPolygon *) polygonForC2;
 + (MKPolygon *) polygonForC3;

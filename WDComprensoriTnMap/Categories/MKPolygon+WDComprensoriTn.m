@@ -246,6 +246,19 @@
     
     return polygon;
 }
++ (MKPolygon *) polygonForEverythingButTrentino{
+    MKMapPoint worldOrigin = MKMapRectWorld.origin;
+    MKMapSize worldSize = MKMapRectWorld.size;
+    
+    MKMapPoint points[4];
+    
+    points[0] = worldOrigin;
+    points[1] = MKMapPointMake(worldOrigin.x + worldSize.width, worldOrigin.y);
+    points[2] = MKMapPointMake(worldOrigin.x, worldOrigin.y + worldSize.height);
+    points[3] = MKMapPointMake(worldOrigin.x + worldSize.width, worldOrigin.y + worldSize.height);
+    
+    return [MKPolygon polygonWithPoints:points count:4 interiorPolygons:@[[MKPolygon polygonForTrentino]]];
+}
 + (MKPolygon *) polygonForC1 {
     CLLocationCoordinate2D points[69];
     
