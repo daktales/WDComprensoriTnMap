@@ -34,6 +34,7 @@ typedef NS_ENUM(NSUInteger, WDComprensoriTnIdentifier){
 @property (nonatomic,strong) UIColor *comprensoriInternalBordersColor UI_APPEARANCE_SELECTOR;
 @property (nonatomic,strong) UIColor *comprensoriExternalBordersColor UI_APPEARANCE_SELECTOR;
 @property (nonatomic,strong) UIColor *comprensoriOuterColor UI_APPEARANCE_SELECTOR;
+@property (nonatomic) CGFloat comprensoriPadding UI_APPEARANCE_SELECTOR;
 
 @property (nonatomic,assign) id<WDComprensoriTnDelegate> comprensoriDelegate;
 

@@ -31,6 +31,7 @@ static NSUInteger const world = (NSUIntegerMax - 1);
         _comprensoriInternalBordersColor = [UIColor colorWithRed:127.0f/255.0f green:140.0f/255.0f blue:141.0f/255.0f alpha:0.4];
         _comprensoriExternalBordersColor = [UIColor colorWithRed:127.0f/255.0f green:140.0f/255.0f blue:141.0f/255.0f alpha:0.8];
         _comprensoriOuterColor = [UIColor colorWithRed:149.0f/255.0f green:165.0f/255.0f blue:166.0f/255.0f alpha:0.4];
+        _comprensoriPadding = 5.0f;
         
         // Init Polygons
         _trentinoRegion = [MKPolygon regionWithPolygon:[MKPolygon polygonForTrentino] withIdentifier:@(trentino)];
@@ -68,7 +69,12 @@ static NSUInteger const world = (NSUIntegerMax - 1);
         [self addGestureRecognizer:tapGesture];
         
         // This force overlay drawing
-        [self setVisibleMapRect:[_trentinoRegion boundingMapRect] edgePadding:UIEdgeInsetsMake(10, 10, 10, 10) animated:NO];
+        [self setVisibleMapRect:[_trentinoRegion boundingMapRect]
+                    edgePadding:UIEdgeInsetsMake(_comprensoriPadding,
+                                                 _comprensoriPadding,
+                                                 _comprensoriPadding,
+                                                 _comprensoriPadding)
+                       animated:NO];
     }
     return self;
 }
@@ -147,9 +153,12 @@ static NSUInteger const world = (NSUIntegerMax - 1);
     // Zooming in is possible but no zooming out
     
     MKMapRect currentRect = [mapView visibleMapRect];
-    MKMapRect maxRect = [_trentinoRegion boundingMapRect];
-    if ((currentRect.size.height > maxRect.size.height)&&(currentRect.size.width > maxRect.size.width)){
-        [mapView setVisibleMapRect:maxRect edgePadding:UIEdgeInsetsMake(10, 10, 10, 10) animated:YES];
+    MKMapRect maxRect = MKMapRectInset([_trentinoRegion boundingMapRect],_comprensoriPadding,_comprensoriPadding);
+    
+    // Check position
+    if ((!MKMapRectIntersectsRect(currentRect, maxRect))||
+        ((currentRect.size.height > maxRect.size.height)&&(currentRect.size.width > maxRect.size.width))){
+        [mapView setVisibleMapRect:maxRect edgePadding:UIEdgeInsetsMake(_comprensoriPadding, _comprensoriPadding, _comprensoriPadding, _comprensoriPadding) animated:YES];
     }
 }
 
