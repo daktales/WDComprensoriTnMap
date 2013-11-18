@@ -31,6 +31,10 @@ typedef NS_ENUM(NSUInteger, WDComprensoriTnIdentifier){
 @interface WDComprensoriTnMapView : MKMapView <MKMapViewDelegate>
 @property (nonatomic,strong) UIColor *comprensoriSelectedColor UI_APPEARANCE_SELECTOR;
 @property (nonatomic,strong) UIColor *comprensoriUnselectedColor UI_APPEARANCE_SELECTOR;
+@property (nonatomic,strong) UIColor *comprensoriInternalBordersColor UI_APPEARANCE_SELECTOR;
+@property (nonatomic,strong) UIColor *comprensoriExternalBordersColor UI_APPEARANCE_SELECTOR;
+@property (nonatomic,strong) UIColor *comprensoriOuterColor UI_APPEARANCE_SELECTOR;
+
 @property (nonatomic,assign) id<WDComprensoriTnDelegate> comprensoriDelegate;
 
 - (void) setComprensorio:(WDComprensoriTnIdentifier)identifier asSelected:(BOOL)filled animated:(BOOL)animated;

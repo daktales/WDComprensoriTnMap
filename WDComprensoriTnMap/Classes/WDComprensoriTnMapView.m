@@ -17,6 +17,7 @@
 @implementation WDComprensoriTnMapView
 
 static NSUInteger const trentino = NSUIntegerMax;
+static NSUInteger const world = (NSUIntegerMax - 1);
 
 - (id)initWithFrame:(CGRect)frame
 {
@@ -26,7 +27,10 @@ static NSUInteger const trentino = NSUIntegerMax;
         
         // Default values
         _comprensoriSelectedColor = [UIColor colorWithRed:41.0f/255.0f green:128.0f/255.0f blue:185.0f/255.0f alpha:0.6];
-        _comprensoriUnselectedColor = [[UIColor whiteColor] colorWithAlphaComponent:0.2];
+        _comprensoriUnselectedColor = [UIColor clearColor];
+        _comprensoriInternalBordersColor = [UIColor colorWithRed:127.0f/255.0f green:140.0f/255.0f blue:141.0f/255.0f alpha:0.4];
+        _comprensoriExternalBordersColor = [UIColor colorWithRed:127.0f/255.0f green:140.0f/255.0f blue:141.0f/255.0f alpha:0.8];
+        _comprensoriOuterColor = [UIColor colorWithRed:149.0f/255.0f green:165.0f/255.0f blue:166.0f/255.0f alpha:0.4];
         
         // Init Polygons
         _trentinoRegion = [MKPolygon regionWithPolygon:[MKPolygon polygonForTrentino] withIdentifier:@(trentino)];
@@ -43,7 +47,10 @@ static NSUInteger const trentino = NSUIntegerMax;
                                 @(comprensorioC10): [MKPolygon regionWithPolygon:[MKPolygon polygonForC10] withIdentifier:@(comprensorioC10)],
                                 @(comprensorioC11): [MKPolygon regionWithPolygon:[MKPolygon polygonForC11] withIdentifier:@(comprensorioC11)]};
         // Setting map
-        self.mapType = MKMapTypeHybrid;
+        self.mapType = MKMapTypeStandard;
+        
+        // Add opaque overlay
+        [self addOverlay:[MKPolygon regionWithPolygon:[MKPolygon polygonForEverythingButTrentino] withIdentifier:@(world)] level:MKOverlayLevelAboveRoads];
         
         // Add polygons to map
         [self addOverlay:_trentinoRegion level:MKOverlayLevelAboveRoads];
@@ -61,7 +68,7 @@ static NSUInteger const trentino = NSUIntegerMax;
         [self addGestureRecognizer:tapGesture];
         
         // This force overlay drawing
-        self.visibleMapRect = [_trentinoRegion boundingMapRect];
+        [self setVisibleMapRect:[_trentinoRegion boundingMapRect] edgePadding:UIEdgeInsetsMake(10, 10, 10, 10) animated:NO];
     }
     return self;
 }
@@ -107,9 +114,14 @@ static NSUInteger const trentino = NSUIntegerMax;
     NSNumber *identifier = (NSNumber *)region.identifier;
     MKPolygonRenderer *renderer = [[MKPolygonRenderer alloc] initWithPolygon:region];
     
+    if ([identifier isEqual:@(world)]){
+        renderer.fillColor = _comprensoriOuterColor;
+        return renderer;
+    }
+    
     if ([identifier isEqual:@(trentino)]){
         renderer.fillColor = [UIColor clearColor];
-        renderer.strokeColor = [[UIColor whiteColor] colorWithAlphaComponent:0.8];
+        renderer.strokeColor = _comprensoriExternalBordersColor;
         renderer.lineWidth = 2.0f;
     } else {
         switch (region.state) {
@@ -123,7 +135,7 @@ static NSUInteger const trentino = NSUIntegerMax;
                 break;
             }
         }
-        renderer.strokeColor = [[UIColor whiteColor] colorWithAlphaComponent:0.4];
+        renderer.strokeColor = _comprensoriInternalBordersColor;
         renderer.lineWidth = 2.0f;
     }
     
