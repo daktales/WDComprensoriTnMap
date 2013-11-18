@@ -142,4 +142,15 @@ static NSUInteger const world = (NSUIntegerMax - 1);
     return renderer;
 }
 
+- (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated{
+    // Limit visible area to Trentino
+    // Zooming in is possible but no zooming out
+    
+    MKMapRect currentRect = [mapView visibleMapRect];
+    MKMapRect maxRect = [_trentinoRegion boundingMapRect];
+    if ((currentRect.size.height > maxRect.size.height)&&(currentRect.size.width > maxRect.size.width)){
+        [mapView setVisibleMapRect:maxRect edgePadding:UIEdgeInsetsMake(10, 10, 10, 10) animated:YES];
+    }
+}
+
 @end
