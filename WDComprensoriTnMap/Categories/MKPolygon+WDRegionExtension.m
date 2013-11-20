@@ -9,7 +9,7 @@
 #import "MKPolygon+WDRegionExtension.h"
 #import <objc/runtime.h>
 
-@interface MKPolygon (WDRegionExtension)
+@interface MKPolygon ()
 @property (nonatomic,strong) UIBezierPath *path;
 @end
 
@@ -42,12 +42,18 @@ static char identifierKey;
     return objc_getAssociatedObject(self, &identifierKey);
 }
 
+- (void)dealloc{
+    objc_setAssociatedObject(self, &pathKey, nil, OBJC_ASSOCIATION_RETAIN);
+    objc_setAssociatedObject(self, &stateKey, nil, OBJC_ASSOCIATION_RETAIN);
+    objc_setAssociatedObject(self, &identifierKey, nil, OBJC_ASSOCIATION_RETAIN);
+}
+
 + (MKPolygon *)regionWithPolygon:(MKPolygon *)polygon withIdentifier:(id<NSCopying>)identifier{
-    MKPolygon *region = [MKPolygon polygonWithPoints:polygon.points count:polygon.pointCount interiorPolygons:polygon.interiorPolygons];
-    [region setIdentifier:identifier];
-    [region setPath:[MKPolygon pathFromMKPolygon:polygon]];
-    [region setState:regionUnselectedState];
-    return region;
+    //MKPolygon *region = [MKPolygon polygonWithPoints:polygon.points count:polygon.pointCount interiorPolygons:polygon.interiorPolygons];
+    [polygon setIdentifier:identifier];
+    [polygon setPath:[MKPolygon pathFromMKPolygon:polygon]];
+    [polygon setState:regionUnselectedState];
+    return polygon;
 }
 
 + (UIBezierPath *) pathFromMKPolygon:(MKPolygon *)polygon{
