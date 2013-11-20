@@ -23,6 +23,12 @@ typedef NS_ENUM(NSUInteger, WDComprensoriTnIdentifier){
 };
 
 @class WDComprensoriTnMapView;
+
+@protocol WDComprensoriTnDataSource <NSObject>
+@optional
+- (BOOL) mapview:(WDComprensoriTnMapView *)mapview shouldSelectComprensorio:(WDComprensoriTnIdentifier)identifier;
+@end
+
 @protocol WDComprensoriTnDelegate <NSObject>
 @optional
 - (void) mapview:(WDComprensoriTnMapView *)mapview didTapComprensorio:(WDComprensoriTnIdentifier)identifier;
@@ -37,6 +43,7 @@ typedef NS_ENUM(NSUInteger, WDComprensoriTnIdentifier){
 @property (nonatomic) CGFloat comprensoriPadding UI_APPEARANCE_SELECTOR;
 
 @property (nonatomic,assign) id<WDComprensoriTnDelegate> comprensoriDelegate;
+@property (nonatomic,assign) id<WDComprensoriTnDataSource> comprensoriDataSource;
 
 - (void) setComprensorio:(WDComprensoriTnIdentifier)identifier asSelected:(BOOL)filled animated:(BOOL)animated;
 @end

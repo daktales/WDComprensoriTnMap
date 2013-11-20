@@ -24,6 +24,14 @@ static NSUInteger const world = (NSUIntegerMax - 1);
     self = [super initWithFrame:frame];
     if (self) {
         // Initialization code
+        self.mapType = MKMapTypeStandard;
+        self.zoomEnabled = YES;
+        self.pitchEnabled = NO;
+        self.rotateEnabled = YES;
+        self.scrollEnabled = YES;
+        
+        self.showsPointsOfInterest = NO;
+        self.showsBuildings = NO;
         
         // Default values
         _comprensoriSelectedColor = [UIColor colorWithRed:41.0f/255.0f green:128.0f/255.0f blue:185.0f/255.0f alpha:0.6];
@@ -34,8 +42,8 @@ static NSUInteger const world = (NSUIntegerMax - 1);
         _comprensoriPadding = 5.0f;
         
         // Init Polygons
-        _trentinoRegion = [MKPolygon regionWithPolygon:[MKPolygon polygonForTrentino] withIdentifier:@(trentino)];
-        _comprensoriRegions = @{
+        self.trentinoRegion = [MKPolygon regionWithPolygon:[MKPolygon polygonForTrentino] withIdentifier:@(trentino)];
+        self.comprensoriRegions = @{
                                 @(comprensorioC1): [MKPolygon regionWithPolygon:[MKPolygon polygonForC1] withIdentifier:@(comprensorioC1)],
                                 @(comprensorioC2): [MKPolygon regionWithPolygon:[MKPolygon polygonForC2] withIdentifier:@(comprensorioC2)],
                                 @(comprensorioC3): [MKPolygon regionWithPolygon:[MKPolygon polygonForC3] withIdentifier:@(comprensorioC3)],
@@ -48,18 +56,19 @@ static NSUInteger const world = (NSUIntegerMax - 1);
                                 @(comprensorioC10): [MKPolygon regionWithPolygon:[MKPolygon polygonForC10] withIdentifier:@(comprensorioC10)],
                                 @(comprensorioC11): [MKPolygon regionWithPolygon:[MKPolygon polygonForC11] withIdentifier:@(comprensorioC11)]};
         // Setting map
-        self.mapType = MKMapTypeStandard;
+        
         
         // Add opaque overlay
         [self addOverlay:[MKPolygon regionWithPolygon:[MKPolygon polygonForEverythingButTrentino] withIdentifier:@(world)] level:MKOverlayLevelAboveRoads];
         
         // Add polygons to map
-        [self addOverlay:_trentinoRegion level:MKOverlayLevelAboveRoads];
-        [self addOverlays:[_comprensoriRegions allValues] level:MKOverlayLevelAboveRoads];
+        [self addOverlays:[self.comprensoriRegions allValues] level:MKOverlayLevelAboveRoads];
+        [self addOverlay:self.trentinoRegion level:MKOverlayLevelAboveRoads];
         
         // Setting delegate
         self.delegate = self;
         self.comprensoriDelegate = nil;
+        self.comprensoriDataSource = nil;
         
         // Setting Tap recognizer
         UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognizer:)];
@@ -67,16 +76,17 @@ static NSUInteger const world = (NSUIntegerMax - 1);
         tapGesture.numberOfTouchesRequired = 1;
         
         [self addGestureRecognizer:tapGesture];
-        
-        // This force overlay drawing
-        [self setVisibleMapRect:[_trentinoRegion boundingMapRect]
-                    edgePadding:UIEdgeInsetsMake(_comprensoriPadding,
-                                                 _comprensoriPadding,
-                                                 _comprensoriPadding,
-                                                 _comprensoriPadding)
-                       animated:NO];
     }
     return self;
+}
+
+- (void) centerOnTrentinoAnimated:(BOOL)animated{
+    [self setVisibleMapRect:[self.trentinoRegion boundingMapRect]
+                edgePadding:UIEdgeInsetsMake(_comprensoriPadding,
+                                             _comprensoriPadding,
+                                             _comprensoriPadding,
+                                             _comprensoriPadding)
+                   animated:animated];
 }
 
 -(void) tapRecognizer:(UITapGestureRecognizer *)sender{
@@ -87,8 +97,8 @@ static NSUInteger const world = (NSUIntegerMax - 1);
             
             CLLocationCoordinate2D loc = [self convertPoint:p toCoordinateFromView:self];
             
-            if ([_trentinoRegion containsCoordinate:loc]){
-                for (MKPolygon *region in [_comprensoriRegions allValues]) {
+            if ([self.trentinoRegion containsCoordinate:loc]){
+                for (MKPolygon *region in [self.comprensoriRegions allValues]) {
                     if ([region containsCoordinate:loc]){
                         WDComprensoriTnIdentifier identifier = [(NSNumber *)region.identifier intValue];
                         [self.comprensoriDelegate mapview:self didTapComprensorio:identifier];
@@ -117,33 +127,40 @@ static NSUInteger const world = (NSUIntegerMax - 1);
     }
     
     MKPolygon *region = (MKPolygon *)overlay;
-    NSNumber *identifier = (NSNumber *)region.identifier;
+    NSUInteger identifier = [(NSNumber *)region.identifier unsignedIntegerValue];
     MKPolygonRenderer *renderer = [[MKPolygonRenderer alloc] initWithPolygon:region];
     
-    if ([identifier isEqual:@(world)]){
+    if (identifier == world){
         renderer.fillColor = _comprensoriOuterColor;
         return renderer;
     }
     
-    if ([identifier isEqual:@(trentino)]){
+    if (identifier == trentino){
         renderer.fillColor = [UIColor clearColor];
         renderer.strokeColor = _comprensoriExternalBordersColor;
         renderer.lineWidth = 2.0f;
-    } else {
-        switch (region.state) {
-            case regionSelectedState:{
-                renderer.fillColor = _comprensoriSelectedColor;
-                break;
-            }
-            case regionUnselectedState:
-            default:{
-                renderer.fillColor = _comprensoriUnselectedColor;
-                break;
-            }
-        }
-        renderer.strokeColor = _comprensoriInternalBordersColor;
-        renderer.lineWidth = 2.0f;
+        return renderer;
     }
+    
+    if ([self.comprensoriDelegate respondsToSelector:@selector(mapview:shouldSelectComprensorio:)]){
+        region.state = [self.comprensoriDataSource mapview:self shouldSelectComprensorio:identifier] ? regionSelectedState : regionUnselectedState;
+    } else {
+        region.state = regionUnselectedState;
+    }
+    
+    switch (region.state) {
+        case regionSelectedState:{
+            renderer.fillColor = _comprensoriSelectedColor;
+            break;
+        }
+        case regionUnselectedState:
+        default:{
+            renderer.fillColor = _comprensoriUnselectedColor;
+            break;
+        }
+    }
+    renderer.strokeColor = _comprensoriInternalBordersColor;
+    renderer.lineWidth = 2.0f;
     
     return renderer;
 }
@@ -151,14 +168,18 @@ static NSUInteger const world = (NSUIntegerMax - 1);
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated{
     // Limit visible area to Trentino
     // Zooming in is possible but no zooming out
-    
     MKMapRect currentRect = [mapView visibleMapRect];
-    MKMapRect maxRect = MKMapRectInset([_trentinoRegion boundingMapRect],_comprensoriPadding,_comprensoriPadding);
+    MKMapRect maxRect = MKMapRectInset([self.trentinoRegion boundingMapRect], - _comprensoriPadding, - _comprensoriPadding);
     
     // Check position
-    if ((!MKMapRectIntersectsRect(currentRect, maxRect))||
-        ((currentRect.size.height > maxRect.size.height)&&(currentRect.size.width > maxRect.size.width))){
-        [mapView setVisibleMapRect:maxRect edgePadding:UIEdgeInsetsMake(_comprensoriPadding, _comprensoriPadding, _comprensoriPadding, _comprensoriPadding) animated:YES];
+    if (!MKMapRectIntersectsRect(currentRect, maxRect)){
+        [self centerOnTrentinoAnimated:YES];
+        return;
+    }
+    if (currentRect.size.width > (maxRect.size.width * 1.5)&&
+        currentRect.size.width > (maxRect.size.height * 1.5)){
+    [self centerOnTrentinoAnimated:YES];
+        return;
     }
 }
 
